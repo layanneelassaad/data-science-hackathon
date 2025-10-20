@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Python / build
+__pycache__/
+*.py[cod]
+*$py.class
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+python-env/
+
+# Jupyter
+.ipynb_checkpoints/
+.profile
+*.nbconvert.ipynb
+
+# Data & models
+data/
+models/
+
+# IDEs
+.vscode/
+.idea/
+
+# Windows cruft
+ehthumbs.db
+Thumbs.db
+
+# Allow public sample data folder
+!data_public/
