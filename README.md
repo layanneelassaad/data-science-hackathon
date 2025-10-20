@@ -35,12 +35,12 @@
 ## Exploratory Data Analysis
 
 ![Borough GHG Intensity](assets/borough.jpg)  
-*Figure 1 — Borough comparison of per-building GHG intensity.*
+*Figure 1: Borough comparison of per-building GHG intensity.*
 
 Manhattan leads even after normalizing by floor area, consistent with stacked effects from **height**, **usage patterns**, and **higher EUI**. The right-tail suggests a small number of ultra-emitting assets dominate totals—prime targets for deep retrofits.
 
 ![Properties Meeting Limits](assets/properties_meeting_limits.jpg)  
-*Figure 2 — Properties meeting LL97 limits by type: only two buildings are within the regulation band.*
+*Figure 2: Properties meeting LL97 limits by type: only two buildings are within the regulation band.*
 
 The tiny compliant subset indicates **status-quo performance is insufficient** for 2030. Segments with the **lowest compliance share** (e.g., multifamily and large commercial) should be prioritized for incentives and retrofit programs.
 
