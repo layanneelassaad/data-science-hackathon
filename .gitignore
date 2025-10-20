@@ -25,7 +25,6 @@ python-env/
 *.nbconvert.ipynb
 
 # Data & models
-data/
 models/
 
 # IDEs
