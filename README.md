@@ -6,6 +6,7 @@
 
 ---
 
+
 ## Project Overview
 
 **Context.** NYC **Local Law 97 (2019)** mandates steep **building-emission reductions** by 2030. Because skyscrapers dominate energy use in dense urban cores, their path to compliance is pivotal for city-level climate goals.
@@ -23,51 +24,65 @@
 
 - **Scope & sources.** Building-level features (e.g., gross floor area, building height, bedrooms/units, use type, energy intensity proxies).  
 - **Imputation.** **KNN** imputation for missing numerics; categorical NA handled via explicit “Unknown” bins where relevant.  
-- **Feature selection.** Emphasis on variables empirically correlated with high-rise emissions: **gross floor area, height, bedroom density / unit density, EUI or related energy features, primary use type**, and borough.  
-- **Transformations.**  
+- **Feature selection.** Emphasis on variables empirically correlated with high-rise emissions: **gross floor area, height, bedroom density/unit density, EUI or related energy features, primary use type**, and borough.  
+- **Transformations.**
   - Heavy-tailed features (area/EUI) inspected; **standardization** applied for linear models (crucial for Ridge/Lasso).  
-  - Optional log transforms were evaluated; retained only where they improved cross-validated error.  
-- **Train/validation/test.** Stratified splits by use-type/size bands to avoid leakage from extremely similar buildings and to preserve class balance for compliance labels.
+  - Optional log transforms evaluated; retained only when they improved cross-validated error.  
+- **Splits.** Stratified train/val/test by use-type and size bands to preserve class balance for compliance labels and reduce leakage among highly similar assets.
 
 ---
 
-## Exploratory Data Analysis (highlights)
+## Exploratory Data Analysis
 
-- **Intensity gradient.** Manhattan exhibits the **highest per-building emissions intensity** among boroughs, consistent with its **height + area** profile.  
-- **Correlations.** **Floor area** is the dominant linear correlate with total GHG, followed by **EUI** and (to a lesser degree) **height**. Multifamily and large commercial clusters sit at the upper tail.  
-- **Outliers & leverage.** A few ultra-large assets act as **leverage points**—a key reason regularization (Ridge) beats vanilla OLS.
+![Borough GHG Intensity](assets/fig01_borough_intensity.png)  
+*Figure 1 — Borough comparison of per-building GHG intensity.*
+
+Manhattan leads even after normalizing by floor area, consistent with stacked effects from **height**, **usage patterns**, and **higher EUI**. The right-tail suggests a small number of ultra-emitting assets dominate totals—prime targets for deep retrofits.
+
+![Properties Meeting Limits](assets/properties_meeting_limits.png)  
+*Figure 2 — Properties meeting LL97 limits by type: only two buildings are within the regulation band.*
+
+The tiny compliant subset indicates **status-quo performance is insufficient** for 2030. Segments with the **lowest compliance share** (e.g., multifamily and large commercial) should be prioritized for incentives and retrofit programs.
+
 
 ---
 
 ## Modeling & Evaluation
 
-### 1) Emissions Regression
-**Models.** KNN Regressor, OLS, **Ridge**, Lasso (all with scaling where appropriate).  
-**Tuning.** Hyperparameters selected via nested CV (grid over α for Ridge/Lasso; neighbors/distance metric for KNN).  
-**Result.** **Ridge (scaled+tuned)** achieves **≈ 68% accuracy** (notebook details include metric choice & CV folds).  
-**Takeaways.**  
-- **Collinearity** (area, height, usage patterns) makes **Ridge** robust vs. OLS.  
-- **Feature weights** (standardized) highlight **gross floor area** and **EUI** as the strongest positive contributors; **use type** effects show **multifamily** and **large commercial** consistently higher.  
-- **KNN** performs competitively on mid-range assets but is sensitive to local density in feature space; Lasso sparsifies but underfits at extremes.
+**Emissions Regression**
 
-### 2) Compliance Classification (2030 Proxy)
-**Labeling.** “Compliant” approximated as **below national medians / policy-aligned thresholds** for GHG intensity (proxy for 2030 caps).  
+**Models.** KNN Regressor, OLS, **Ridge**, Lasso (scaled where appropriate).  
+**Tuning.** Nested CV (grid over α for Ridge/Lasso; neighbors/metric for KNN).  
+
+
+**Result.** **Ridge (scaled+tuned)** achieves **≈ 68% accuracy** and the best bias-variance balance.  
+
+Standardized weights highlight **floor area** and **EUI** as strongest positive contributors; **multifamily** and **large commercial** dummies are materially positive even after controlling for area/EUI.  
+
+Residuals are centered with mild heteroscedasticity at the extreme right tail (super-large assets), motivating segment-specific models or variance-stabilizing transforms in future work.
+
+**Compliance Classification (2030 Proxy)**
+
+**Labeling.** “Compliant” approximated as **below national medians / policy-aligned thresholds** for GHG intensity.  
 **Model.** **Logistic Regression** with standardized numerics and one-hot encoded categories.  
-**Performance.** **≈ 62% accuracy** with reasonable precision/recall balance (see notebook for PR curves, calibration, and threshold sweeps).  
-**Finding.** Under current performance distributions, **only a small percentage** of skyscrapers appear **on track** for 2030 compliance—implying meaningful shortfalls without intervention.
 
-**Evaluation notes.**
-- We report accuracy for headline comparability and include **MAE/R²** for regression and **AUROC/PR** for classification in the notebook.
-- **Calibration** checked; logistic model is slightly under-confident—temperature scaling marginally improves Brier score but not headline accuracy.
+
+**Performance.** **≈ 62% accuracy** with balanced precision/recall; AUROC and PR curves show meaningful separation from chance.  
+
+
+**Analysis to include.** Model is slightly under-confident (probabilities conservative). **Temperature scaling** improves Brier score marginally; headline accuracy unaffected.
+
+
+**Analysis to include.** **Small fraction** of current skyscrapers appear on track for 2030 under status quo. **Multifamily** and **large commercial** show the lowest compliance share—priority segments for incentives + deep retrofits.
 
 ---
 
 ## Policy-Relevant Insights
 
-- **Concentration risk.** A relatively small set of very large assets contributes a disproportionate share of absolute GHG. Targeting these with **deep retrofits** yields outsized impact.  
-- **Multifamily & large commercial** are the **heaviest segments**; tailored programs (e.g., electrification incentives, EUI reduction via HVAC upgrades, envelope improvements) are likely necessary.  
-- **Standards + incentives.** Penalties alone risk non-compliance and pass-through costs; **incentive structures** (rebates, low-interest retrofit finance) can accelerate upgrades.  
-- **Data gaps.** Incorporating **fuel mix / on-site generation**, **retrofit history**, **system age**, and **occupancy patterns** should sharpen predictions and retrofit ROI estimates.
+- **Concentration risk.** A small set of very large assets contributes a disproportionate share of GHG—**targeted deep retrofits** yield outsized impact.  
+- **Segment focus.** **Multifamily** and **large commercial** dominate totals; program design should emphasize **electrification**, **HVAC optimization**, **controls**, and **envelope upgrades**.  
+- **Standards + incentives.** Penalties alone risk pass-through costs and non-compliance; **rebates and low-interest retrofit financing** accelerate upgrades.  
+- **Data gaps.** Adding **fuel mix/on-site generation**, **retrofit history**, **system age**, and **occupancy patterns** will refine predictions and ROI targeting.
 
 ---
 
@@ -82,8 +97,7 @@
   - **Causal signals:** Difference-in-differences around retrofit interventions where panel data exists.
 
 ---
-
-## Quickstart
+## Setup
 
 ```bash
 python -m venv .venv && source .venv/bin/activate    # or: conda create -n ll97 python=3.11
@@ -96,7 +110,6 @@ jupyter notebook notebooks/NYC_LL97_PiercingTheSky.ipynb
 jupyter nbconvert --to html --execute notebooks/NYC_LL97_PiercingTheSky.ipynb \
   --output ./assets/notebook.html --ExecutePreprocessor.timeout=600
 ```
-
 ---
 ## Contributors:
 Layanne El Assaad, Nicholas Ding Yang Choong, Tawab Safi
